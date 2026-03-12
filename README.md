@@ -32,6 +32,18 @@ Release the mouse over a highlighted zone to snap the window to that zone.
 4. Fully quit ScreenZ and relaunch after changing permissions.
 5. If behavior is still unclear, inspect `~/screenz-debug.log`.
 
+### Build Distributable App (with icon)
+
+Run:
+```bash
+./scripts/package_app.sh
+```
+
+This builds a universal release app, generates `AppIcon.icns` from `icon.png`,
+signs the app ad-hoc, and writes:
+- `dist/ScreenZ.app`
+- `dist/ScreenZ.zip`
+
 ---
 
 ## Project Structure

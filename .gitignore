@@ -28,4 +28,4 @@ project.xcworkspace
 
 # Other
 .claude/
-
+dist/
