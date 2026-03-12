@@ -27,11 +27,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ScreenZLog.write("Accessibility: \(hasPerm)")
         ScreenZLog.write("macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)")
 
-        // Request Accessibility permission. If not yet granted, macOS shows a system
-        // dialog directing the user to System Settings → Privacy & Security → Accessibility.
-        if !PermissionManager.requestIfNeeded() {
-            // Permission denied or not yet decided — show our own explanatory alert.
-            PermissionManager.showPermissionAlert()
+        // Request Accessibility permission only when not already granted.
+        if !hasPerm {
+            // If still unavailable after requesting, show guidance.
+            if !PermissionManager.requestIfNeeded() {
+                PermissionManager.showPermissionAlert()
+            }
         }
 
         // Start the event monitor and wiring only after permission handling.

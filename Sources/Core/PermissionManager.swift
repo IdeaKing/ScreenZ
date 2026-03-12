@@ -19,6 +19,7 @@ enum PermissionManager {
     /// are silent if the user has already granted or denied.
     @discardableResult
     static func requestIfNeeded() -> Bool {
+        guard !hasAccessibilityPermission else { return true }
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
             as CFDictionary
         return AXIsProcessTrustedWithOptions(options)
