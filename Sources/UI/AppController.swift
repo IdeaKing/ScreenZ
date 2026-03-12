@@ -38,16 +38,41 @@ final class AppController {
 
     // MARK: - Layout switching (called by the status-bar menu)
 
-    func setLayout(_ layout: ZoneLayout) {
-        overlayManager.setLayout(layout)
-    }
-
     var currentLayout: ZoneLayout { overlayManager.currentLayout }
     var availableLayouts: [ZoneLayout] { layoutStore.allLayouts }
     var customLayouts: [ZoneLayout] { layoutStore.customLayouts }
 
+    func setLayout(_ layout: ZoneLayout) {
+        overlayManager.setLayout(layout)
+    }
+
+    func setLayout(_ layout: ZoneLayout, forScreenID screenID: UInt32) {
+        overlayManager.setLayout(layout, forScreenID: screenID)
+    }
+
+    func clearLayoutOverride(forScreenID screenID: UInt32) {
+        overlayManager.clearLayoutOverride(forScreenID: screenID)
+    }
+
+    func hasLayoutOverride(forScreenID screenID: UInt32) -> Bool {
+        overlayManager.hasLayoutOverride(forScreenID: screenID)
+    }
+
+    func layout(for screen: NSScreen) -> ZoneLayout {
+        overlayManager.layout(for: screen)
+    }
+
+    func layout(forScreenID screenID: UInt32) -> ZoneLayout {
+        overlayManager.layout(forScreenID: screenID)
+    }
+
+    func screenID(for screen: NSScreen) -> UInt32 {
+        overlayManager.screenID(for: screen)
+    }
+
     func saveCustomLayout(_ layout: ZoneLayout, applyImmediately: Bool = true) {
         layoutStore.upsertCustomLayout(layout)
+        overlayManager.refreshReferences(to: layout)
         if applyImmediately {
             setLayout(layout)
         }
@@ -56,9 +81,7 @@ final class AppController {
 
     func deleteCustomLayout(id: UUID) {
         layoutStore.removeCustomLayout(id: id)
-        if currentLayout.id == id {
-            setLayout(.sideBySide)
-        }
+        overlayManager.removeReferences(toDeletedLayoutID: id, fallbackDefaultLayout: .sideBySide)
         onLayoutsChanged?()
     }
 
@@ -73,6 +96,7 @@ final class AppController {
     ) {
         guard mode == .runtime else { return }
         guard let activeScreen = screen ?? NSScreen.screens.first else { return }
+        let activeScreenLayout = overlayManager.layout(for: activeScreen)
 
         ScreenZLog.write("[LayoutEditor] entering editor mode")
         mode = .layoutEditor
@@ -82,7 +106,8 @@ final class AppController {
 
         let initial = editorInitialLayout(
             editingCustomLayoutID: layoutID,
-            forceNewLayout: forceNewLayout
+            forceNewLayout: forceNewLayout,
+            sourceLayout: activeScreenLayout
         )
         let isEditingExistingLayout = layoutStore.customLayouts.contains { $0.id == initial.id }
         let editor = LayoutEditorOverlayController(
@@ -108,17 +133,21 @@ final class AppController {
         editor.start()
     }
 
-    private func editorInitialLayout(editingCustomLayoutID layoutID: UUID?, forceNewLayout: Bool) -> ZoneLayout {
+    private func editorInitialLayout(
+        editingCustomLayoutID layoutID: UUID?,
+        forceNewLayout: Bool,
+        sourceLayout: ZoneLayout
+    ) -> ZoneLayout {
         if let layoutID, let explicit = customLayout(withID: layoutID) {
             return explicit
         }
-        if !forceNewLayout, let currentCustom = customLayout(withID: currentLayout.id) {
+        if !forceNewLayout, let currentCustom = customLayout(withID: sourceLayout.id) {
             return currentCustom
         }
         return ZoneLayout(
             id: UUID(),
             name: nextDefaultCustomLayoutName(),
-            zones: currentLayout.zones
+            zones: sourceLayout.zones
         )
     }
 
@@ -177,7 +206,8 @@ final class AppController {
             }
             // Derive the zone from the mouse-up position directly for accuracy —
             // more reliable than trusting the async overlay highlight state.
-            guard let zone = self.overlayManager.currentLayout.zone(at: cursorPoint, on: screen) else {
+            let layout = self.overlayManager.layout(for: screen)
+            guard let zone = layout.zone(at: cursorPoint, on: screen) else {
                 ScreenZLog.write("⚠️  no zone hit at cursor position — cursor may be outside all zones")
                 return
             }

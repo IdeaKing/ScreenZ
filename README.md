@@ -138,7 +138,8 @@ To edit in Xcode: select the target → **Info** tab → expand the plist.
 | Move cursor over a zone | Zone highlights in blue |
 | Release mouse over a zone | Window snaps to that zone |
 | Release **⇧** before releasing mouse | Overlay dismisses; window moves freely |
-| Status-bar menu › Layouts | Switch between built-in and custom layouts |
+| Status-bar menu › Default Layout | Choose the fallback layout used by displays without overrides |
+| Status-bar menu › Screen Layouts | Assign a different layout to each connected display |
 | Status-bar menu › Custom Layouts › New Custom Layout… | Create a new custom layout from the current active layout |
 | Status-bar menu › Custom Layouts › Edit Active Layout… | Edit the current custom layout (or customize the active built-in layout) |
 | Status-bar menu › Custom Layouts › *Layout Name* › Edit/Delete | Edit or delete any previously saved custom layout |
