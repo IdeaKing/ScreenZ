@@ -1,0 +1,110 @@
+{
+  "": {
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/master.swiftdeps"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/GlobalEventMonitor.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/GlobalEventMonitor.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/GlobalEventMonitor.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/GlobalEventMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/GlobalEventMonitor.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/GlobalEventMonitor.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/LayoutStore.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/LayoutStore.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/LayoutStore.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/LayoutStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/LayoutStore.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/LayoutStore.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/PermissionManager.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/PermissionManager.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/PermissionManager.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/PermissionManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/PermissionManager.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/PermissionManager.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/ScreenDetector.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenDetector.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenDetector.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenDetector~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenDetector.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenDetector.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/ScreenZLog.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenZLog.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenZLog.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenZLog~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenZLog.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ScreenZLog.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Core/WindowResizer.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/WindowResizer.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/WindowResizer.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/WindowResizer~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/WindowResizer.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/WindowResizer.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Models/Zone.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/Zone.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/Zone.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/Zone~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/Zone.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/Zone.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/Models/ZoneLayout.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneLayout.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneLayout.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneLayout~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneLayout.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneLayout.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/AppController.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppController.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppController.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppController~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppController.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppController.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/AppDelegate.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppDelegate.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppDelegate.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppDelegate.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/AppDelegate.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/CustomLayoutEditorWindowController.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/CustomLayoutEditorWindowController.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/CustomLayoutEditorWindowController.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/CustomLayoutEditorWindowController~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/CustomLayoutEditorWindowController.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/CustomLayoutEditorWindowController.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/OverlayManager.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/OverlayManager.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/OverlayManager.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/OverlayManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/OverlayManager.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/OverlayManager.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/ZoneOverlayView.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayView.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayView.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayView~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayView.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayView.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/UI/ZoneOverlayWindow.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayWindow.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayWindow.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayWindow~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayWindow.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/ZoneOverlayWindow.dia"
+  },
+  "/Users/tkchia/Documents/screenz/Sources/main.swift": {
+    "dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/main.d",
+    "object": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/main.swift.o",
+    "swiftmodule": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/main.swiftdeps",
+    "diagnostics": "/Users/tkchia/Documents/screenz/.build/arm64-apple-macosx/debug/ScreenZ.build/main.dia"
+  }
+}

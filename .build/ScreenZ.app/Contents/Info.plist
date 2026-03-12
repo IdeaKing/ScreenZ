@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Bundle identity -->
+    <key>CFBundleIdentifier</key>
+    <string>com.yourname.ScreenZ</string>
+
+    <key>CFBundleName</key>
+    <string>ScreenZ</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>ScreenZ</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleExecutable</key>
+    <string>ScreenZ</string>
+
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <!-- *** Critical: hide the app from the Dock and App Switcher ***
+         This makes ScreenZ run as a pure menu-bar utility.
+         Combine with NSApp.setActivationPolicy(.accessory) in AppDelegate. -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Minimum deployment target -->
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+
+    <!-- Privacy usage descriptions shown in System Settings -->
+    <key>NSAccessibilityUsageDescription</key>
+    <string>ScreenZ requires Accessibility access to detect window drag gestures and
+        to move and resize windows into snap zones.</string>
+
+    <!-- Principal class (required when using @NSApplicationMain) -->
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+
+    <!-- Opt in to the full-resolution screen APIs -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <!-- Allow the app to be a helper — no activation on launch -->
+    <key>NSSupportsAutomaticTermination</key>
+    <false/>
+    <key>NSSuddenTerminationEnabled</key>
+    <false/>
+</dict>
+</plist>
