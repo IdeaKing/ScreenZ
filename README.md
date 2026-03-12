@@ -138,8 +138,10 @@ To edit in Xcode: select the target → **Info** tab → expand the plist.
 | Move cursor over a zone | Zone highlights in blue |
 | Release mouse over a zone | Window snaps to that zone |
 | Release **⇧** before releasing mouse | Overlay dismisses; window moves freely |
-| Status-bar menu › Layout | Switch between Halves / Quarters / Thirds / 3×2 Grid / Priority |
-| Status-bar menu › Layout Editor… | Enter dedicated editor mode on active display and design custom layouts |
+| Status-bar menu › Layouts | Switch between built-in and custom layouts |
+| Status-bar menu › Custom Layouts › New Custom Layout… | Create a new custom layout from the current active layout |
+| Status-bar menu › Custom Layouts › Edit Active Layout… | Edit the current custom layout (or customize the active built-in layout) |
+| Status-bar menu › Custom Layouts › *Layout Name* › Edit/Delete | Edit or delete any previously saved custom layout |
 
 ### Custom layout editor
 
@@ -147,6 +149,8 @@ The dedicated editor mode pauses normal window management and opens a full-scree
 - Drag on empty space to create a panel
 - Drag inside a panel to move it
 - Drag panel edges/corners to resize it
+- Use the X/Y/W/H inspector fields for precise numeric sizing of the selected panel
+- Press **Delete** (or **Fn+Delete**) to remove the selected panel
 - Panels snap to display bounds and adjacent panel edges for precise alignment
 - Saved layouts are serialized as JSON at `~/Library/Application Support/ScreenZ/layouts.json`
 

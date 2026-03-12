@@ -62,7 +62,15 @@ final class AppController {
         onLayoutsChanged?()
     }
 
-    func beginLayoutEditor(on screen: NSScreen? = ScreenDetector.screenAtCursor) {
+    func customLayout(withID id: UUID) -> ZoneLayout? {
+        layoutStore.customLayouts.first { $0.id == id }
+    }
+
+    func beginLayoutEditor(
+        editingCustomLayoutID layoutID: UUID? = nil,
+        forceNewLayout: Bool = false,
+        on screen: NSScreen? = ScreenDetector.screenAtCursor
+    ) {
         guard mode == .runtime else { return }
         guard let activeScreen = screen ?? NSScreen.screens.first else { return }
 
@@ -72,15 +80,15 @@ final class AppController {
         trackedWindow = nil
         monitor.stop()
 
-        let initial: ZoneLayout
-        if layoutStore.customLayouts.contains(where: { $0.id == currentLayout.id }) {
-            initial = currentLayout
-        } else {
-            initial = ZoneLayout(id: UUID(), name: "Custom Layout", zones: currentLayout.zones)
-        }
+        let initial = editorInitialLayout(
+            editingCustomLayoutID: layoutID,
+            forceNewLayout: forceNewLayout
+        )
+        let isEditingExistingLayout = layoutStore.customLayouts.contains { $0.id == initial.id }
         let editor = LayoutEditorOverlayController(
             screen: activeScreen,
-            initialLayout: initial
+            initialLayout: initial,
+            isEditingExistingLayout: isEditingExistingLayout
         ) { [weak self] result in
             guard let self else { return }
             switch result {
@@ -98,6 +106,38 @@ final class AppController {
         }
         layoutEditorOverlayController = editor
         editor.start()
+    }
+
+    private func editorInitialLayout(editingCustomLayoutID layoutID: UUID?, forceNewLayout: Bool) -> ZoneLayout {
+        if let layoutID, let explicit = customLayout(withID: layoutID) {
+            return explicit
+        }
+        if !forceNewLayout, let currentCustom = customLayout(withID: currentLayout.id) {
+            return currentCustom
+        }
+        return ZoneLayout(
+            id: UUID(),
+            name: nextDefaultCustomLayoutName(),
+            zones: currentLayout.zones
+        )
+    }
+
+    private func nextDefaultCustomLayoutName() -> String {
+        let baseName = "Custom Layout"
+        let matchesName: (String) -> Bool = { candidate in
+            self.layoutStore.customLayouts.contains {
+                $0.name.compare(candidate, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+            }
+        }
+        if !matchesName(baseName) {
+            return baseName
+        }
+
+        var suffix = 2
+        while matchesName("\(baseName) \(suffix)") {
+            suffix += 1
+        }
+        return "\(baseName) \(suffix)"
     }
 
     // MARK: - Callback wiring

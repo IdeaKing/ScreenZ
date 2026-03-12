@@ -8,6 +8,7 @@ enum LayoutEditorResult {
 final class LayoutEditorOverlayController: NSObject {
     private let screen: NSScreen
     private let initialLayout: ZoneLayout?
+    private let isEditingExistingLayout: Bool
     private let completion: (LayoutEditorResult) -> Void
     private var window: LayoutEditorOverlayWindow?
     private var isFinishing = false
@@ -15,10 +16,12 @@ final class LayoutEditorOverlayController: NSObject {
     init(
         screen: NSScreen,
         initialLayout: ZoneLayout?,
+        isEditingExistingLayout: Bool,
         completion: @escaping (LayoutEditorResult) -> Void
     ) {
         self.screen = screen
         self.initialLayout = initialLayout
+        self.isEditingExistingLayout = isEditingExistingLayout
         self.completion = completion
         super.init()
     }
@@ -26,7 +29,11 @@ final class LayoutEditorOverlayController: NSObject {
     func start() {
         guard window == nil else { return }
 
-        let window = LayoutEditorOverlayWindow(screen: screen, initialLayout: initialLayout)
+        let window = LayoutEditorOverlayWindow(
+            screen: screen,
+            initialLayout: initialLayout,
+            isEditingExistingLayout: isEditingExistingLayout
+        )
         window.onCancel = { [weak self] in
             self?.finish(.cancelled)
         }
@@ -63,17 +70,25 @@ final class LayoutEditorOverlayController: NSObject {
     }
 }
 
-private final class LayoutEditorOverlayWindow: NSWindow {
+private final class LayoutEditorOverlayWindow: NSWindow, NSTextFieldDelegate {
     var onSave: ((ZoneLayout) -> Void)?
     var onCancel: (() -> Void)?
 
     private let canvasView: LayoutEditorCanvasView
+    private let isEditingExistingLayout: Bool
     private let layoutNameField = NSTextField(string: "")
     private let statusLabel = NSTextField(labelWithString: "")
+    private let selectedPanelLabel = NSTextField(labelWithString: "Selected: None")
+    private let xField = NSTextField(string: "")
+    private let yField = NSTextField(string: "")
+    private let widthField = NSTextField(string: "")
+    private let heightField = NSTextField(string: "")
     private let layoutID: UUID
+    private var isUpdatingInspectorFields = false
 
-    init(screen: NSScreen, initialLayout: ZoneLayout?) {
+    init(screen: NSScreen, initialLayout: ZoneLayout?, isEditingExistingLayout: Bool) {
         self.canvasView = LayoutEditorCanvasView(screen: screen)
+        self.isEditingExistingLayout = isEditingExistingLayout
         self.layoutID = initialLayout?.id ?? UUID()
 
         super.init(
@@ -125,6 +140,7 @@ private final class LayoutEditorOverlayWindow: NSWindow {
     func present() {
         setFrame(frame, display: true)
         makeKeyAndOrderFront(nil)
+        makeFirstResponder(canvasView)
         orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -139,7 +155,7 @@ private final class LayoutEditorOverlayWindow: NSWindow {
         hud.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(hud)
 
-        let titleLabel = NSTextField(labelWithString: "Layout Editor Mode")
+        let titleLabel = NSTextField(labelWithString: isEditingExistingLayout ? "Editing Custom Layout" : "New Custom Layout")
         titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
         titleLabel.textColor = .white
 
@@ -151,7 +167,7 @@ private final class LayoutEditorOverlayWindow: NSWindow {
         closeButton.widthAnchor.constraint(equalToConstant: 28).isActive = true
         closeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
-        let helpLabel = NSTextField(labelWithString: "Drag on empty space to create panels. Drag inside to move. Drag edges/corners to resize. Panels snap to each other.")
+        let helpLabel = NSTextField(labelWithString: "Drag on empty space to create panels. Drag inside to move. Drag edges/corners to resize. Panels snap to each other. Press Delete to remove selected panel.")
         helpLabel.font = .systemFont(ofSize: 11, weight: .regular)
         helpLabel.textColor = .secondaryLabelColor
         helpLabel.lineBreakMode = .byTruncatingTail
@@ -167,9 +183,38 @@ private final class LayoutEditorOverlayWindow: NSWindow {
         let clearButton = NSButton(title: "Clear Panels", target: self, action: #selector(clearTapped))
         clearButton.bezelStyle = .rounded
 
-        let saveButton = NSButton(title: "Save Layout", target: self, action: #selector(saveTapped))
+        let saveButton = NSButton(
+            title: isEditingExistingLayout ? "Update Layout" : "Save Layout",
+            target: self,
+            action: #selector(saveTapped)
+        )
         saveButton.bezelStyle = .rounded
         saveButton.keyEquivalent = "\r"
+
+        selectedPanelLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        selectedPanelLabel.textColor = .secondaryLabelColor
+
+        configureInspectorField(xField, placeholder: "X")
+        configureInspectorField(yField, placeholder: "Y")
+        configureInspectorField(widthField, placeholder: "W")
+        configureInspectorField(heightField, placeholder: "H")
+
+        let dimensionsRow = NSStackView(views: [
+            selectedPanelLabel,
+            NSView(),
+            NSTextField(labelWithString: "X"),
+            xField,
+            NSTextField(labelWithString: "Y"),
+            yField,
+            NSTextField(labelWithString: "W"),
+            widthField,
+            NSTextField(labelWithString: "H"),
+            heightField,
+            NSTextField(labelWithString: "px"),
+        ])
+        dimensionsRow.orientation = .horizontal
+        dimensionsRow.alignment = .centerY
+        dimensionsRow.spacing = 6
 
         statusLabel.font = .systemFont(ofSize: 11, weight: .regular)
         statusLabel.textColor = .secondaryLabelColor
@@ -190,7 +235,7 @@ private final class LayoutEditorOverlayWindow: NSWindow {
         titleRow.alignment = .centerY
         titleRow.spacing = 8
 
-        let stack = NSStackView(views: [titleRow, helpLabel, fieldRow, statusLabel])
+        let stack = NSStackView(views: [titleRow, helpLabel, fieldRow, dimensionsRow, statusLabel])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 6
@@ -213,13 +258,93 @@ private final class LayoutEditorOverlayWindow: NSWindow {
             return [hud.frame]
         }
         canvasView.onPanelsChanged = { [weak self] in self?.refreshStatus() }
+        refreshInspector()
     }
 
     private func refreshStatus() {
         let count = canvasView.panelCount
+        let modeText = isEditingExistingLayout ? "Editing saved layout." : "Creating new layout."
         statusLabel.stringValue = count == 0
-            ? "Create at least one panel before saving."
-            : "\(count) panel\(count == 1 ? "" : "s") configured."
+            ? "\(modeText) Create at least one panel before saving."
+            : "\(modeText) \(count) panel\(count == 1 ? "" : "s") configured."
+        refreshInspector()
+    }
+
+    private func configureInspectorField(_ field: NSTextField, placeholder: String) {
+        field.placeholderString = placeholder
+        field.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        field.alignment = .right
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: 58).isActive = true
+        field.target = self
+        field.action = #selector(inspectorFieldChanged(_:))
+        field.delegate = self
+    }
+
+    private func refreshInspector() {
+        guard let selected = canvasView.selectedPanel else {
+            selectedPanelLabel.stringValue = "Selected: None"
+            setInspectorEnabled(false)
+            isUpdatingInspectorFields = true
+            xField.stringValue = ""
+            yField.stringValue = ""
+            widthField.stringValue = ""
+            heightField.stringValue = ""
+            isUpdatingInspectorFields = false
+            return
+        }
+
+        selectedPanelLabel.stringValue = "Selected: \(selected.name)"
+        setInspectorEnabled(true)
+        isUpdatingInspectorFields = true
+        xField.stringValue = Self.formatDimension(selected.frame.minX)
+        yField.stringValue = Self.formatDimension(selected.frame.minY)
+        widthField.stringValue = Self.formatDimension(selected.frame.width)
+        heightField.stringValue = Self.formatDimension(selected.frame.height)
+        isUpdatingInspectorFields = false
+    }
+
+    private func setInspectorEnabled(_ enabled: Bool) {
+        xField.isEnabled = enabled
+        yField.isEnabled = enabled
+        widthField.isEnabled = enabled
+        heightField.isEnabled = enabled
+    }
+
+    @objc private func inspectorFieldChanged(_ sender: NSTextField) {
+        let _ = sender
+        applyInspectorFrameEdits()
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        let _ = obj
+        applyInspectorFrameEdits()
+    }
+
+    private func applyInspectorFrameEdits() {
+        guard !isUpdatingInspectorFields else { return }
+        guard let x = Self.parseDimension(xField.stringValue),
+              let y = Self.parseDimension(yField.stringValue),
+              let width = Self.parseDimension(widthField.stringValue),
+              let height = Self.parseDimension(heightField.stringValue)
+        else {
+            refreshInspector()
+            return
+        }
+        guard canvasView.updateSelectedPanelFrame(x: x, y: y, width: width, height: height) else { return }
+        refreshInspector()
+    }
+
+    private static func parseDimension(_ value: String) -> CGFloat? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let normalized = trimmed.replacingOccurrences(of: ",", with: ".")
+        guard let parsed = Double(normalized), parsed.isFinite else { return nil }
+        return CGFloat(parsed)
+    }
+
+    private static func formatDimension(_ value: CGFloat) -> String {
+        String(format: "%.0f", value.rounded())
     }
 
     @objc private func layoutNameChanged() {
@@ -268,6 +393,12 @@ private final class LayoutEditorOverlayWindow: NSWindow {
 }
 
 private final class LayoutEditorCanvasView: NSView {
+    struct SelectionSnapshot {
+        let id: UUID
+        let name: String
+        let frame: CGRect
+    }
+
     private struct Panel: Identifiable {
         let id: UUID
         var name: String
@@ -314,6 +445,19 @@ private final class LayoutEditorCanvasView: NSView {
     override var isFlipped: Bool { false }
 
     var panelCount: Int { panels.count }
+    var selectedPanel: SelectionSnapshot? {
+        guard let selectedPanelID,
+              let panel = panels.first(where: { $0.id == selectedPanelID })
+        else { return nil }
+        let work = workAreaRect
+        let frameInWorkArea = CGRect(
+            x: panel.frame.minX - work.minX,
+            y: panel.frame.minY - work.minY,
+            width: panel.frame.width,
+            height: panel.frame.height
+        )
+        return SelectionSnapshot(id: panel.id, name: panel.name, frame: frameInWorkArea)
+    }
 
     func removeAllPanels() {
         panels.removeAll()
@@ -365,6 +509,25 @@ private final class LayoutEditorCanvasView: NSView {
             )
         }
         return ZoneLayout(id: layoutID, name: name, zones: zones)
+    }
+
+    func updateSelectedPanelFrame(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> Bool {
+        guard width > 0, height > 0, let selectedPanelID else { return false }
+        guard x.isFinite, y.isFinite, width.isFinite, height.isFinite else { return false }
+        let work = workAreaRect
+        let candidate = CGRect(x: work.minX + x, y: work.minY + y, width: width, height: height)
+
+        var clamped = clampedPanelFrame(candidate.standardized)
+        clamped.size.width = max(clamped.width, minPanelSize)
+        clamped.size.height = max(clamped.height, minPanelSize)
+        clamped = clampedPanelFrame(clamped)
+
+        updatePanel(id: selectedPanelID) { panel in
+            panel.frame = clamped
+        }
+        needsDisplay = true
+        onPanelsChanged?()
+        return true
     }
 
     // MARK: - Drawing
@@ -427,13 +590,29 @@ private final class LayoutEditorCanvasView: NSView {
             ]
         )
         let size = label.size()
-        let labelRect = CGRect(
+        let nameRect = CGRect(
             x: rect.midX - size.width / 2,
-            y: rect.midY - size.height / 2,
+            y: rect.midY - size.height / 2 + 9,
             width: size.width,
             height: size.height
         )
-        label.draw(in: labelRect)
+        label.draw(in: nameRect)
+
+        let dimensions = NSAttributedString(
+            string: "\(Int(panel.frame.width.rounded()))×\(Int(panel.frame.height.rounded()))",
+            attributes: [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.92),
+            ]
+        )
+        let dSize = dimensions.size()
+        let dimRect = CGRect(
+            x: rect.midX - dSize.width / 2,
+            y: rect.midY - dSize.height / 2 - 9,
+            width: dSize.width,
+            height: dSize.height
+        )
+        dimensions.draw(in: dimRect)
     }
 
     // MARK: - Mouse interaction
@@ -468,9 +647,10 @@ private final class LayoutEditorCanvasView: NSView {
             selectedPanelID = panelID
             panels.append(Panel(id: panelID, name: "Zone \(panels.count + 1)", frame: CGRect(origin: point, size: .zero)))
             interaction = .creating(panelID: panelID, start: point)
-            onPanelsChanged?()
         }
 
+        window?.makeFirstResponder(self)
+        onPanelsChanged?()
         needsDisplay = true
     }
 
@@ -513,6 +693,7 @@ private final class LayoutEditorCanvasView: NSView {
             updatePanel(id: panelID) { panel in panel.frame = candidate }
         }
 
+        onPanelsChanged?()
         needsDisplay = true
     }
 
@@ -530,6 +711,15 @@ private final class LayoutEditorCanvasView: NSView {
             if selectedPanelID == panelID { selectedPanelID = nil }
             onPanelsChanged?()
         }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 51 || event.keyCode == 117 {
+            if deleteSelectedPanel() {
+                return
+            }
+        }
+        super.keyDown(with: event)
     }
 
     // MARK: - Hit testing
@@ -751,5 +941,18 @@ private final class LayoutEditorCanvasView: NSView {
     private func updatePanel(id: UUID, mutate: (inout Panel) -> Void) {
         guard let idx = panels.firstIndex(where: { $0.id == id }) else { return }
         mutate(&panels[idx])
+    }
+
+    @discardableResult
+    private func deleteSelectedPanel() -> Bool {
+        guard let selectedPanelID else { return false }
+        let removedCountBefore = panels.count
+        panels.removeAll { $0.id == selectedPanelID }
+        guard panels.count != removedCountBefore else { return false }
+        self.selectedPanelID = panels.last?.id
+        interaction = nil
+        needsDisplay = true
+        onPanelsChanged?()
+        return true
     }
 }

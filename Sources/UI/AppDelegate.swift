@@ -70,20 +70,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(header)
         menu.addItem(.separator())
 
-        // --- Layout submenu ---
-        let layoutItem = NSMenuItem(title: "Layout", action: nil, keyEquivalent: "")
+        // --- Layout selector ---
+        let layoutItem = NSMenuItem(title: "Layouts", action: nil, keyEquivalent: "")
         layoutItem.submenu = buildLayoutSubmenu()
         menu.addItem(layoutItem)
-        let customLayoutsItem = NSMenuItem(
-            title: "Layout Editor…",
-            action: #selector(openLayoutEditor),
-            keyEquivalent: "")
-        customLayoutsItem.target = self
-        menu.addItem(customLayoutsItem)
 
-        let deleteCustomLayoutItem = NSMenuItem(title: "Delete Custom Layout", action: nil, keyEquivalent: "")
-        deleteCustomLayoutItem.submenu = buildDeleteCustomLayoutSubmenu()
-        menu.addItem(deleteCustomLayoutItem)
+        // --- Custom layout management ---
+        let customLayoutsItem = NSMenuItem(title: "Custom Layouts", action: nil, keyEquivalent: "")
+        customLayoutsItem.submenu = buildCustomLayoutsSubmenu()
+        menu.addItem(customLayoutsItem)
         menu.addItem(.separator())
 
         // --- Usage hint ---
@@ -115,28 +110,70 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func buildLayoutSubmenu() -> NSMenu {
         let sub = NSMenu()
-        let layouts = controller?.availableLayouts ?? ZoneLayout.all
-        for layout in layouts {
+        let currentID = controller?.currentLayout.id
+
+        let builtInHeader = NSMenuItem(title: "Built-in", action: nil, keyEquivalent: "")
+        builtInHeader.isEnabled = false
+        sub.addItem(builtInHeader)
+
+        for layout in ZoneLayout.builtIn {
             let item = NSMenuItem(
                 title: layout.name,
                 action: #selector(selectLayout(_:)),
                 keyEquivalent: "")
             item.representedObject = layout
             item.target = self
-            item.state = (layout.id == controller?.currentLayout.id) ? .on : .off
+            item.state = (layout.id == currentID) ? .on : .off
             sub.addItem(item)
+        }
+
+        let customLayouts = sortedCustomLayouts()
+        if !customLayouts.isEmpty {
+            sub.addItem(.separator())
+            let customHeader = NSMenuItem(title: "Custom", action: nil, keyEquivalent: "")
+            customHeader.isEnabled = false
+            sub.addItem(customHeader)
+
+            for layout in customLayouts {
+                let item = NSMenuItem(
+                    title: layout.name,
+                    action: #selector(selectLayout(_:)),
+                    keyEquivalent: ""
+                )
+                item.representedObject = layout
+                item.target = self
+                item.state = (layout.id == currentID) ? .on : .off
+                sub.addItem(item)
+            }
         }
         return sub
     }
 
-    private func buildDeleteCustomLayoutSubmenu() -> NSMenu {
+    private func buildCustomLayoutsSubmenu() -> NSMenu {
         let sub = NSMenu()
-        let customLayouts = (controller?.customLayouts ?? []).sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        let customLayouts = sortedCustomLayouts()
+        let isActiveLayoutCustom: Bool
+        if let activeLayoutID = controller?.currentLayout.id {
+            isActiveLayoutCustom = controller?.customLayout(withID: activeLayoutID) != nil
+        } else {
+            isActiveLayoutCustom = false
         }
 
+        let newItem = NSMenuItem(title: "New Custom Layout…", action: #selector(createCustomLayout), keyEquivalent: "")
+        newItem.target = self
+        sub.addItem(newItem)
+
+        let editActiveItem = NSMenuItem(
+            title: isActiveLayoutCustom ? "Edit Active Layout…" : "Customize Active Layout…",
+            action: #selector(openLayoutEditor),
+            keyEquivalent: ""
+        )
+        editActiveItem.target = self
+        sub.addItem(editActiveItem)
+        sub.addItem(.separator())
+
         if customLayouts.isEmpty {
-            let noneItem = NSMenuItem(title: "No custom layouts", action: nil, keyEquivalent: "")
+            let noneItem = NSMenuItem(title: "No custom layouts yet", action: nil, keyEquivalent: "")
             noneItem.isEnabled = false
             sub.addItem(noneItem)
             return sub
@@ -144,17 +181,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         for layout in customLayouts {
             let isCurrent = layout.id == controller?.currentLayout.id
-            let title = isCurrent ? "\(layout.name) (Active)" : layout.name
-            let item = NSMenuItem(
-                title: title,
-                action: #selector(deleteCustomLayout(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = layout.id
-            sub.addItem(item)
+            let parentItem = NSMenuItem(title: layout.name, action: nil, keyEquivalent: "")
+            parentItem.state = isCurrent ? .on : .off
+
+            let itemMenu = NSMenu()
+            if isCurrent {
+                let activeItem = NSMenuItem(title: "Currently Active", action: nil, keyEquivalent: "")
+                activeItem.isEnabled = false
+                itemMenu.addItem(activeItem)
+            } else {
+                let useItem = NSMenuItem(title: "Use Layout", action: #selector(useCustomLayout(_:)), keyEquivalent: "")
+                useItem.target = self
+                useItem.representedObject = layout.id
+                itemMenu.addItem(useItem)
+            }
+
+            let editItem = NSMenuItem(title: "Edit Layout…", action: #selector(editCustomLayout(_:)), keyEquivalent: "")
+            editItem.target = self
+            editItem.representedObject = layout.id
+            itemMenu.addItem(editItem)
+
+            itemMenu.addItem(.separator())
+            let deleteItem = NSMenuItem(title: "Delete Layout…", action: #selector(deleteCustomLayout(_:)), keyEquivalent: "")
+            deleteItem.target = self
+            deleteItem.representedObject = layout.id
+            itemMenu.addItem(deleteItem)
+
+            parentItem.submenu = itemMenu
+            sub.addItem(parentItem)
         }
         return sub
+    }
+
+    private func sortedCustomLayouts() -> [ZoneLayout] {
+        (controller?.customLayouts ?? []).sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
     }
 
     // MARK: - Actions
@@ -162,12 +224,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func selectLayout(_ sender: NSMenuItem) {
         guard let layout = sender.representedObject as? ZoneLayout else { return }
         controller?.setLayout(layout)
-
-        // Update the checkmark in the submenu.
-        if let submenu = sender.menu {
-            submenu.items.forEach { $0.state = .off }
-            sender.state = .on
-        }
+        reloadMenu()
     }
 
     @objc private func openAccessibilitySettings() {
@@ -178,10 +235,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller?.beginLayoutEditor()
     }
 
+    @objc private func createCustomLayout() {
+        controller?.beginLayoutEditor(editingCustomLayoutID: nil, forceNewLayout: true)
+    }
+
+    @objc private func useCustomLayout(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID else { return }
+        guard let layout = controller?.customLayout(withID: id) else { return }
+        controller?.setLayout(layout)
+        reloadMenu()
+    }
+
+    @objc private func editCustomLayout(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID else { return }
+        controller?.beginLayoutEditor(editingCustomLayoutID: id)
+    }
+
     @objc private func deleteCustomLayout(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? UUID else { return }
-        guard let layout = controller?.customLayouts.first(where: { $0.id == id }) else { return }
+        confirmDeleteCustomLayout(id: id)
+    }
 
+    private func confirmDeleteCustomLayout(id: UUID) {
+        guard let layout = controller?.customLayout(withID: id) else { return }
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "Delete '\(layout.name)'?"
