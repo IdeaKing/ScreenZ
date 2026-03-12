@@ -7,7 +7,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var controller: AppController?
     private var statusItem: NSStatusItem?
-    private var layoutEditorWindowController: CustomLayoutEditorWindowController?
 
     // MARK: - NSApplicationDelegate
 
@@ -34,6 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start the event monitor and wiring only after permission handling.
         // If the user grants permission during this session, they need to relaunch.
         controller = AppController()
+        controller?.onLayoutsChanged = { [weak self] in
+            self?.reloadMenu()
+        }
         setupStatusBar()
     }
 
@@ -73,8 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         layoutItem.submenu = buildLayoutSubmenu()
         menu.addItem(layoutItem)
         let customLayoutsItem = NSMenuItem(
-            title: "Custom Layouts…",
-            action: #selector(openCustomLayoutEditor),
+            title: "Layout Editor…",
+            action: #selector(openLayoutEditor),
             keyEquivalent: "")
         customLayoutsItem.target = self
         menu.addItem(customLayoutsItem)
@@ -140,21 +142,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PermissionManager.openSystemSettings()
     }
 
-    @objc private func openCustomLayoutEditor() {
-        if layoutEditorWindowController == nil {
-            let editor = CustomLayoutEditorWindowController(layoutStore: .shared)
-            editor.onLayoutSaved = { [weak self] layout in
-                self?.controller?.saveCustomLayout(layout, applyImmediately: true)
-                self?.reloadMenu()
-            }
-            editor.onLayoutDeleted = { [weak self] id in
-                self?.controller?.deleteCustomLayout(id: id)
-                self?.reloadMenu()
-            }
-            layoutEditorWindowController = editor
-        }
-
-        layoutEditorWindowController?.showWindow(nil)
+    @objc private func openLayoutEditor() {
+        controller?.beginLayoutEditor()
     }
 
     private func reloadMenu() {

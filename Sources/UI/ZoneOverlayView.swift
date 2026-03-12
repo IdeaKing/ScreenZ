@@ -7,26 +7,6 @@ import AppKit
 /// to give clear visual feedback without obscuring the desktop.
 final class ZoneOverlayView: NSView {
 
-    // MARK: - Appearance constants
-
-    private enum Style {
-        /// Default zone fill — very subtle so the desktop remains readable.
-        static let inactiveFill  = NSColor(white: 1.0, alpha: 0.06)
-        /// Default zone border.
-        static let inactiveBorder = NSColor(white: 1.0, alpha: 0.25)
-        /// Highlighted zone fill — clearly visible without being opaque.
-        static let activeFill    = NSColor(red: 0.20, green: 0.50, blue: 1.00, alpha: 0.30)
-        /// Highlighted zone border — accent-coloured and more prominent.
-        static let activeBorder  = NSColor(red: 0.30, green: 0.65, blue: 1.00, alpha: 0.90)
-        /// Highlighted zone shadow colour.
-        static let activeShadow  = NSColor(red: 0.20, green: 0.50, blue: 1.00, alpha: 0.35)
-
-        static let borderWidth: CGFloat   = 1.5
-        static let cornerRadius: CGFloat  = 10
-        static let insetAmount: CGFloat   = 4   // Padding so adjacent zone borders don't overlap
-        static let labelFont              = NSFont.systemFont(ofSize: 12, weight: .medium)
-    }
-
     // MARK: - State
 
     /// The screen this overlay covers. Used for coordinate mapping.
@@ -62,10 +42,10 @@ final class ZoneOverlayView: NSView {
         for zone in layout.zones {
             let isHighlighted = (zone.id == highlightedZoneID)
             let viewRect = zone.overlayViewRect(screen: screen).insetBy(
-                dx: Style.insetAmount, dy: Style.insetAmount)
+                dx: ZoneVisualStyle.insetAmount, dy: ZoneVisualStyle.insetAmount)
             let path = CGPath(roundedRect: viewRect,
-                              cornerWidth: Style.cornerRadius,
-                              cornerHeight: Style.cornerRadius,
+                              cornerWidth: ZoneVisualStyle.cornerRadius,
+                              cornerHeight: ZoneVisualStyle.cornerRadius,
                               transform: nil)
 
             ctx.saveGState()
@@ -73,23 +53,23 @@ final class ZoneOverlayView: NSView {
             // Shadow for highlighted zone only
             if isHighlighted {
                 ctx.setShadow(offset: .zero, blur: 16,
-                              color: Style.activeShadow.cgColor)
+                              color: ZoneVisualStyle.activeShadow.cgColor)
             }
 
             // Fill
             ctx.setFillColor(isHighlighted
-                ? Style.activeFill.cgColor
-                : Style.inactiveFill.cgColor)
+                ? ZoneVisualStyle.activeFill.cgColor
+                : ZoneVisualStyle.inactiveFill.cgColor)
             ctx.addPath(path)
             ctx.fillPath()
 
             // Border
             ctx.setStrokeColor(isHighlighted
-                ? Style.activeBorder.cgColor
-                : Style.inactiveBorder.cgColor)
+                ? ZoneVisualStyle.activeBorder.cgColor
+                : ZoneVisualStyle.inactiveBorder.cgColor)
             ctx.setLineWidth(isHighlighted
-                ? Style.borderWidth * 2
-                : Style.borderWidth)
+                ? ZoneVisualStyle.borderWidth * 2
+                : ZoneVisualStyle.borderWidth)
             ctx.addPath(path)
             ctx.strokePath()
 
@@ -106,7 +86,7 @@ final class ZoneOverlayView: NSView {
 
     private func drawLabel(_ text: String, in rect: CGRect) {
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: Style.labelFont,
+            .font: ZoneVisualStyle.labelFont,
             .foregroundColor: NSColor.white,
         ]
         let attributedString = NSAttributedString(string: text, attributes: attributes)

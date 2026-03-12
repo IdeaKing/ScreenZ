@@ -44,13 +44,16 @@ screenz/
 │   │   └── ZoneLayout.swift     — Named collections of zones; built-in layouts
 │   ├── Core/
 │   │   ├── PermissionManager.swift   — Accessibility permission request + alert
+│   │   ├── LayoutStore.swift         — JSON persistence for custom layouts
 │   │   ├── ScreenDetector.swift      — AppKit ↔ CoreGraphics coordinate conversion
-│   │   ├── GlobalEventMonitor.swift  — CGEvent tap: Shift+drag detection
+│   │   ├── GlobalEventMonitor.swift  — Global mouse monitor: Shift+drag detection
 │   │   └── WindowResizer.swift       — AXUIElement window move/resize
 │   └── UI/
 │       ├── ZoneOverlayView.swift     — NSView: draws zones; highlights hovered zone
 │       ├── ZoneOverlayWindow.swift   — Transparent, non-interactive NSWindow per screen
 │       ├── OverlayManager.swift      — Creates/caches overlay windows; multi-monitor aware
+│       ├── LayoutEditorOverlay.swift — Dedicated full-screen editor state + interaction
+│       ├── ZoneVisualStyle.swift     — Shared translucent zone styling constants
 │       ├── AppController.swift       — Wires monitor → overlay → resizer
 │       └── AppDelegate.swift         — @NSApplicationMain; status-bar menu
 └── Resources/
@@ -122,7 +125,7 @@ To edit in Xcode: select the target → **Info** tab → expand the plist.
 
 > **Why this permission?**
 > ScreenZ uses two macOS APIs that require Accessibility:
-> - `CGEvent.tapCreate` to globally observe mouse drags without being the frontmost app.
+> - `NSEvent.addGlobalMonitorForEvents` to observe drag gestures while running in the background.
 > - `AXUIElementSetAttributeValue` to programmatically move and resize windows.
 
 ---
@@ -136,14 +139,16 @@ To edit in Xcode: select the target → **Info** tab → expand the plist.
 | Release mouse over a zone | Window snaps to that zone |
 | Release **⇧** before releasing mouse | Overlay dismisses; window moves freely |
 | Status-bar menu › Layout | Switch between Halves / Quarters / Thirds / 3×2 Grid / Priority |
-| Status-bar menu › Custom Layouts… | Open editor, create/save your own normalized-zone arrangements |
+| Status-bar menu › Layout Editor… | Enter dedicated editor mode on active display and design custom layouts |
 
 ### Custom layout editor
 
-The editor lets you create arbitrary layouts by defining each zone with normalized coordinates:
-- `x`, `y`, `width`, `height` are in `0...1`
-- `x + width <= 1`, `y + height <= 1`
-- values are relative to each screen's visible frame (Dock/menu bar aware)
+The dedicated editor mode pauses normal window management and opens a full-screen transparent overlay.
+- Drag on empty space to create a panel
+- Drag inside a panel to move it
+- Drag panel edges/corners to resize it
+- Panels snap to display bounds and adjacent panel edges for precise alignment
+- Saved layouts are serialized as JSON at `~/Library/Application Support/ScreenZ/layouts.json`
 
 ---
 
@@ -171,6 +176,14 @@ Y axis: increases upward               Y axis: increases downward
 ### Multi-monitor support
 
 `OverlayManager` maintains a dictionary of `ZoneOverlayWindow` instances keyed by `NSScreenNumber`. Only the overlay on the screen containing the cursor is shown during a drag. If the cursor moves across a display boundary, the old overlay fades out and the new one fades in.
+
+### Layout editor state
+
+`AppController` now has a dedicated layout-editor mode that:
+- pauses the global drag monitor while editing
+- renders a single full-screen interactive overlay on the active display
+- captures all mouse input inside the editor window so underlying apps cannot be interacted with
+- serializes panel geometry to JSON-backed custom layouts consumed by the runtime layout menu
 
 ---
 

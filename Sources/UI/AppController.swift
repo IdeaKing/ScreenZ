@@ -16,9 +16,18 @@ final class AppController {
     private let overlayManager = OverlayManager()
     private let resizer        = WindowResizer()
     private let layoutStore    = LayoutStore.shared
+    private var layoutEditorOverlayController: LayoutEditorOverlayController?
 
     /// The window element recorded at the start of a drag gesture.
     private var trackedWindow: AXUIElement?
+
+    private enum OperatingMode {
+        case runtime
+        case layoutEditor
+    }
+    private var mode: OperatingMode = .runtime
+
+    var onLayoutsChanged: (() -> Void)?
 
     // MARK: - Init
 
@@ -41,6 +50,7 @@ final class AppController {
         if applyImmediately {
             setLayout(layout)
         }
+        onLayoutsChanged?()
     }
 
     func deleteCustomLayout(id: UUID) {
@@ -48,6 +58,45 @@ final class AppController {
         if currentLayout.id == id {
             setLayout(.halves)
         }
+        onLayoutsChanged?()
+    }
+
+    func beginLayoutEditor(on screen: NSScreen? = ScreenDetector.screenAtCursor) {
+        guard mode == .runtime else { return }
+        guard let activeScreen = screen ?? NSScreen.screens.first else { return }
+
+        ScreenZLog.write("[LayoutEditor] entering editor mode")
+        mode = .layoutEditor
+        overlayManager.hideAll()
+        trackedWindow = nil
+        monitor.stop()
+
+        let initial: ZoneLayout
+        if layoutStore.customLayouts.contains(where: { $0.id == currentLayout.id }) {
+            initial = currentLayout
+        } else {
+            initial = ZoneLayout(id: UUID(), name: "Custom Layout", zones: currentLayout.zones)
+        }
+        let editor = LayoutEditorOverlayController(
+            screen: activeScreen,
+            initialLayout: initial
+        ) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case let .saved(layout):
+                ScreenZLog.write("[LayoutEditor] saved '\(layout.name)' with \(layout.zones.count) zones")
+                self.saveCustomLayout(layout, applyImmediately: true)
+            case .cancelled:
+                ScreenZLog.write("[LayoutEditor] cancelled")
+                break
+            }
+            self.layoutEditorOverlayController = nil
+            self.mode = .runtime
+            ScreenZLog.write("[LayoutEditor] returning to runtime mode")
+            self.monitor.start()
+        }
+        layoutEditorOverlayController = editor
+        editor.start()
     }
 
     // MARK: - Callback wiring
@@ -57,6 +106,7 @@ final class AppController {
         // --- Drag began ---
         monitor.onDragBegan = { [weak self] cursorPoint, screen in
             guard let self else { return }
+            guard self.mode == .runtime else { return }
             ScreenZLog.write("dragBegan  AX=\(PermissionManager.hasAccessibilityPermission)")
             // Capture the focused window now, before focus might shift.
             self.trackedWindow = self.resizer.frontmostWindow()
@@ -66,12 +116,14 @@ final class AppController {
 
         // --- Drag moved ---
         monitor.onDragMoved = { [weak self] cursorPoint, screen in
+            guard self?.mode == .runtime else { return }
             self?.overlayManager.updateCursor(at: cursorPoint, on: screen)
         }
 
         // --- Drag ended (mouse released) ---
         monitor.onDragEnded = { [weak self] cursorPoint, screen in
             guard let self else { return }
+            guard self.mode == .runtime else { return }
             defer {
                 self.overlayManager.hideAll()
                 self.trackedWindow = nil
@@ -93,6 +145,7 @@ final class AppController {
 
         // --- Drag cancelled (Shift released early or tap disabled) ---
         monitor.onDragCancelled = { [weak self] in
+            guard self?.mode == .runtime else { return }
             ScreenZLog.write("dragCancelled (Shift released before mouse-up, or tap disabled)")
             self?.overlayManager.hideAll()
             self?.trackedWindow = nil

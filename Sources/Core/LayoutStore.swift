@@ -1,19 +1,15 @@
 import Foundation
 
-/// Persists user-defined custom layouts to UserDefaults.
+/// Persists user-defined custom layouts as JSON in Application Support.
 final class LayoutStore {
     static let shared = LayoutStore()
 
-    private enum Keys {
-        static let customLayouts = "screenz.customLayouts.v1"
-    }
-
-    private let defaults: UserDefaults
+    private let fileURL: URL
     private(set) var customLayouts: [ZoneLayout]
 
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-        self.customLayouts = Self.loadCustomLayouts(from: defaults)
+    init(fileURL: URL = LayoutStore.defaultFileURL()) {
+        self.fileURL = fileURL
+        self.customLayouts = Self.loadCustomLayouts(from: fileURL)
     }
 
     var allLayouts: [ZoneLayout] {
@@ -38,14 +34,29 @@ final class LayoutStore {
 
     private func persist() {
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(customLayouts) {
-            defaults.set(data, forKey: Keys.customLayouts)
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+        guard let data = try? encoder.encode(customLayouts) else { return }
+        let fm = FileManager.default
+        do {
+            try fm.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: fileURL, options: .atomic)
+        } catch {
+            ScreenZLog.write("❌ failed writing layout config JSON: \(error.localizedDescription)")
         }
     }
 
-    private static func loadCustomLayouts(from defaults: UserDefaults) -> [ZoneLayout] {
-        guard let data = defaults.data(forKey: Keys.customLayouts) else { return [] }
+    private static func loadCustomLayouts(from fileURL: URL) -> [ZoneLayout] {
+        guard let data = try? Data(contentsOf: fileURL) else { return [] }
         let decoder = JSONDecoder()
         return (try? decoder.decode([ZoneLayout].self, from: data)) ?? []
+    }
+
+    private static func defaultFileURL() -> URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
+        return appSupport
+            .appendingPathComponent("ScreenZ", isDirectory: true)
+            .appendingPathComponent("layouts.json", isDirectory: false)
     }
 }
