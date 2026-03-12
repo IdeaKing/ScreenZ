@@ -44,6 +44,18 @@ signs the app ad-hoc, and writes:
 - `dist/ScreenZ.app`
 - `dist/ScreenZ.zip`
 
+### Build macOS Installer (.pkg)
+
+Run:
+```bash
+./scripts/build_installer.sh
+```
+
+This rebuilds the app bundle and creates:
+- `dist/ScreenZ-installer.pkg`
+
+The installer places `ScreenZ.app` into `/Applications`.
+
 ---
 
 ## Project Structure

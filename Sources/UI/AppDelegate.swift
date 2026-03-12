@@ -27,6 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ScreenZLog.write("Accessibility: \(hasPerm)")
         ScreenZLog.write("macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)")
 
+        LaunchAtLoginManager.enableIfNeeded()
+
         // Request Accessibility permission only when not already granted.
         if !hasPerm {
             // If still unavailable after requesting, show guidance.

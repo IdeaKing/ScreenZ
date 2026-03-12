@@ -17,6 +17,7 @@ final class AppController {
     private let resizer        = WindowResizer()
     private let layoutStore    = LayoutStore.shared
     private var layoutEditorOverlayController: LayoutEditorOverlayController?
+    private var hasShownMissingAccessibilityAlertThisLaunch = false
 
     /// The window element recorded at the start of a drag gesture.
     private var trackedWindow: AXUIElement?
@@ -177,6 +178,20 @@ final class AppController {
         monitor.onDragBegan = { [weak self] cursorPoint, screen in
             guard let self else { return }
             guard self.mode == .runtime else { return }
+            guard PermissionManager.hasAccessibilityPermission else {
+                self.overlayManager.hideAll()
+                self.trackedWindow = nil
+                if !self.hasShownMissingAccessibilityAlertThisLaunch {
+                    self.hasShownMissingAccessibilityAlertThisLaunch = true
+                    ScreenZLog.write("⚠️  Accessibility missing at drag start; prompting user")
+                    _ = PermissionManager.requestIfNeeded()
+                    DispatchQueue.main.async {
+                        PermissionManager.showPermissionAlert()
+                    }
+                }
+                return
+            }
+            self.hasShownMissingAccessibilityAlertThisLaunch = false
             ScreenZLog.write("dragBegan  AX=\(PermissionManager.hasAccessibilityPermission)")
             // Capture the focused window now, before focus might shift.
             self.trackedWindow = self.resizer.frontmostWindow()
