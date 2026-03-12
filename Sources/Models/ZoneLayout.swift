@@ -21,6 +21,12 @@ struct ZoneLayout: Identifiable, Equatable, Codable {
 
     // MARK: - Built-in layouts
 
+    /// Two side-by-side columns.
+    static let sideBySide = ZoneLayout(name: "Side by Side", zones: [
+        Zone(name: "Left",  x: 0.0, y: 0.0, width: 0.5, height: 1.0),
+        Zone(name: "Right", x: 0.5, y: 0.0, width: 0.5, height: 1.0),
+    ])
+
     /// Two vertical halves + two horizontal halves (4 zones, some overlap by design).
     static let halves = ZoneLayout(name: "Halves", zones: [
         Zone(name: "Left Half",   x: 0.0, y: 0.0, width: 0.5, height: 1.0),
@@ -61,6 +67,6 @@ struct ZoneLayout: Identifiable, Equatable, Codable {
         Zone(name: "Right Sidebar", x: 0.75,      y: 0.0, width: 0.25,      height: 1.0),
     ])
 
-    static let builtIn: [ZoneLayout] = [.halves, .quarters, .thirds, .sixths, .priority]
+    static let builtIn: [ZoneLayout] = [.sideBySide, .halves, .quarters, .thirds, .sixths, .priority]
     static let all: [ZoneLayout] = builtIn
 }

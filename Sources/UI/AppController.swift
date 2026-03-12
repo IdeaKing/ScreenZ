@@ -57,7 +57,7 @@ final class AppController {
     func deleteCustomLayout(id: UUID) {
         layoutStore.removeCustomLayout(id: id)
         if currentLayout.id == id {
-            setLayout(.halves)
+            setLayout(.sideBySide)
         }
         onLayoutsChanged?()
     }

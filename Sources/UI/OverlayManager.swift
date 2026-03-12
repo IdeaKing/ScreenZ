@@ -18,7 +18,7 @@ final class OverlayManager {
     private var activeScreen: NSScreen?
 
     /// Current layout applied to all overlays.
-    private(set) var currentLayout: ZoneLayout = .halves
+    private(set) var currentLayout: ZoneLayout = .sideBySide
 
     // MARK: - Init
 
