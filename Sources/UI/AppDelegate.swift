@@ -80,6 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: "")
         customLayoutsItem.target = self
         menu.addItem(customLayoutsItem)
+
+        let deleteCustomLayoutItem = NSMenuItem(title: "Delete Custom Layout", action: nil, keyEquivalent: "")
+        deleteCustomLayoutItem.submenu = buildDeleteCustomLayoutSubmenu()
+        menu.addItem(deleteCustomLayoutItem)
         menu.addItem(.separator())
 
         // --- Usage hint ---
@@ -125,6 +129,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return sub
     }
 
+    private func buildDeleteCustomLayoutSubmenu() -> NSMenu {
+        let sub = NSMenu()
+        let customLayouts = (controller?.customLayouts ?? []).sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+
+        if customLayouts.isEmpty {
+            let noneItem = NSMenuItem(title: "No custom layouts", action: nil, keyEquivalent: "")
+            noneItem.isEnabled = false
+            sub.addItem(noneItem)
+            return sub
+        }
+
+        for layout in customLayouts {
+            let isCurrent = layout.id == controller?.currentLayout.id
+            let title = isCurrent ? "\(layout.name) (Active)" : layout.name
+            let item = NSMenuItem(
+                title: title,
+                action: #selector(deleteCustomLayout(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = layout.id
+            sub.addItem(item)
+        }
+        return sub
+    }
+
     // MARK: - Actions
 
     @objc private func selectLayout(_ sender: NSMenuItem) {
@@ -144,6 +176,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openLayoutEditor() {
         controller?.beginLayoutEditor()
+    }
+
+    @objc private func deleteCustomLayout(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID else { return }
+        guard let layout = controller?.customLayouts.first(where: { $0.id == id }) else { return }
+
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Delete '\(layout.name)'?"
+        alert.informativeText = "This removes the custom layout from ScreenZ."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Delete")
+        alert.addButton(withTitle: "Cancel")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            controller?.deleteCustomLayout(id: id)
+        }
     }
 
     private func reloadMenu() {

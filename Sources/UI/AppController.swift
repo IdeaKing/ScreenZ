@@ -44,6 +44,7 @@ final class AppController {
 
     var currentLayout: ZoneLayout { overlayManager.currentLayout }
     var availableLayouts: [ZoneLayout] { layoutStore.allLayouts }
+    var customLayouts: [ZoneLayout] { layoutStore.customLayouts }
 
     func saveCustomLayout(_ layout: ZoneLayout, applyImmediately: Bool = true) {
         layoutStore.upsertCustomLayout(layout)
